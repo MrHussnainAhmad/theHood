@@ -1,13 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import { Users, Briefcase, Package, MapPin, TrendingUp, Clock } from "lucide-react";
-
-type OrderWithRelations = Prisma.OrderGetPayload<{
-  include: {
-    user: { select: { name: true; email: true } };
-    service: { select: { name: true } };
-  };
-}>;
 
 async function getStats() {
   const [
@@ -45,6 +37,10 @@ async function getStats() {
     recentOrders,
   };
 }
+
+// Infer the type from the return value
+type Stats = Awaited<ReturnType<typeof getStats>>;
+type Order = Stats['recentOrders'][number];
 
 export default async function AdminDashboard() {
   const stats = await getStats();
@@ -166,7 +162,7 @@ export default async function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {stats.recentOrders.map((order: OrderWithRelations) => (
+              {stats.recentOrders.map((order: Order) => (
                 <tr key={order.id} className="border-b border-neutral-100">
                   <td className="py-4 px-4">
                     <div>
