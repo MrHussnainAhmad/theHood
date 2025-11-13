@@ -18,6 +18,10 @@ async function getUserOrders(userId: string) {
   });
 }
 
+// Infer types from the return value
+type Orders = Awaited<ReturnType<typeof getUserOrders>>;
+type Order = Orders[number];
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
@@ -29,9 +33,9 @@ export default async function DashboardPage() {
 
   const stats = {
     total: orders.length,
-    processing: orders.filter((o) => o.status === "PROCESSING").length,
-    onWay: orders.filter((o) => o.status === "ON_WAY").length,
-    completed: orders.filter((o) => o.status === "COMPLETED").length,
+    processing: orders.filter((o: Order) => o.status === "PROCESSING").length,
+    onWay: orders.filter((o: Order) => o.status === "ON_WAY").length,
+    completed: orders.filter((o: Order) => o.status === "COMPLETED").length,
   };
 
   const getStatusIcon = (status: string) => {
@@ -160,7 +164,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
+              {orders.map((order: Order) => (
                 <div
                   key={order.id}
                   className="border border-neutral-200 rounded-lg p-6 hover:shadow-md transition-shadow"
