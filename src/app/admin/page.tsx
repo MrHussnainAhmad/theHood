@@ -1,5 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { Users, Briefcase, Package, MapPin, TrendingUp, Clock } from "lucide-react";
+
+type OrderWithRelations = Prisma.OrderGetPayload<{
+  include: {
+    user: { select: { name: true; email: true } };
+    service: { select: { name: true } };
+  };
+}>;
 
 async function getStats() {
   const [
@@ -158,7 +166,7 @@ export default async function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {stats.recentOrders.map((order) => (
+              {stats.recentOrders.map((order: OrderWithRelations) => (
                 <tr key={order.id} className="border-b border-neutral-100">
                   <td className="py-4 px-4">
                     <div>
