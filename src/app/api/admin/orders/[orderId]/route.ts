@@ -1,0 +1,102 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+
+export async function PATCH(
+  request: Request,
+  props: { params: Promise<{ orderId: string }> }
+) {
+  const params = await props.params;
+  
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { status } = body;
+
+    const updateData: any = { status };
+
+    // Set completedDate when status changes to COMPLETED
+    if (status === "COMPLETED") {
+      updateData.completedDate = new Date();
+    }
+
+    const order = await prisma.order.update({
+      where: { id: params.orderId },
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        service: true,
+      },
+    });
+
+    return NextResponse.json(order);
+  } catch (error) {
+    console.error("Order update error:", error);
+    return NextResponse.json(
+      { error: "Failed to update order" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(
+  request: Request,
+  props: { params: Promise<{ orderId: string }> }
+) {
+  const params = await props.params;
+  
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: params.orderId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        service: true,
+        review: true,
+      },
+    });
+
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Check if user is authorized to view this order
+    if (
+      session.user.role !== "ADMIN" &&
+      session.user.id !== order.userId
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    return NextResponse.json(order);
+  } catch (error) {
+    console.error("Order fetch error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch order" },
+      { status: 500 }
+    );
+  }
+}

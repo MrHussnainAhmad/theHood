@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hood</string>
+    <string name="title_activity_main">Hood</string>
+    <string name="package_name">com.hood.app</string>
+    <string name="custom_url_scheme">com.hood.app</string>
+</resources>
