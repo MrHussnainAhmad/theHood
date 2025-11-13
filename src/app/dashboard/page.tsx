@@ -200,7 +200,7 @@ export default async function DashboardPage() {
                   {/* Images */}
                   {order.images.length > 0 && (
                     <div className="flex gap-2 mb-4">
-                      {order.images.slice(0, 3).map((img: string, idx) => (
+                      {order.images.slice(0, 3).map((img: string, idx: number) => (
                         <div
                           key={idx}
                           className="w-20 h-20 bg-neutral-100 rounded-lg overflow-hidden"
