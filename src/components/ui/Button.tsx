@@ -9,20 +9,24 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, children, disabled, ...props }, ref) => {
-    const baseStyles = "font-medium rounded-lg transition-all duration-200 active:scale-95 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
+    const baseStyles =
+      "inline-flex min-h-11 items-center justify-center gap-2 rounded-full font-semibold tracking-[-0.01em] transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
     
     const variants = {
-      primary: "bg-primary-600 hover:bg-primary-700 text-white shadow-md hover:shadow-lg",
-      secondary: "bg-accent-600 hover:bg-accent-700 text-white shadow-md hover:shadow-lg",
-      outline: "bg-white hover:bg-neutral-50 text-primary-600 border-2 border-primary-600",
-      ghost: "hover:bg-neutral-100 text-neutral-700",
-      danger: "bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg",
+      primary:
+        "bg-gradient-to-br from-primary-500 to-primary-700 text-paper shadow-soft hover:-translate-y-0.5 hover:shadow-premium",
+      secondary:
+        "bg-gradient-to-br from-accent-500 to-accent-700 text-paper shadow-soft hover:-translate-y-0.5 hover:shadow-premium",
+      outline:
+        "bg-white/75 text-primary-700 border border-primary-300 hover:bg-primary-50 hover:-translate-y-0.5",
+      ghost: "text-neutral-700 hover:bg-white/70",
+      danger: "bg-red-600 text-white hover:-translate-y-0.5 hover:bg-red-700",
     };
 
     const sizes = {
       sm: "px-4 py-2 text-sm",
-      md: "px-6 py-3 text-base",
-      lg: "px-8 py-4 text-lg",
+      md: "px-6 py-2.5 text-sm",
+      lg: "px-8 py-3 text-base",
     };
 
     return (

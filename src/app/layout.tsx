@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { inter, spaceGrotesk } from "./fonts";
+import { dmSans, dmSerif } from "./fonts";
 import "./globals.css";
 import { Toaster } from "sonner";
 import SessionProvider from "@/components/providers/SessionProvider";
 
 export const metadata: Metadata = {
-  title: "Hood - Premium Home Services",
-  description: "Professional house maintenance services at your doorstep",
+  title: "Hood Studio | Homes, Crafted by Pros",
+  description: "Book trusted service professionals or offer your skills as a provider in Hood Studio.",
 };
 
 export default function RootLayout({
@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className={`${inter.className} antialiased bg-neutral-50`}>
+    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
+      <body className={`${dmSans.className} antialiased`}>
         <SessionProvider>
           {children}
           <Toaster position="top-right" richColors />

@@ -5,7 +5,9 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, name, phone } = body;
+    const { email, password, name, phone, role, providerEmployeeRange } = body;
+    const normalizedRole = role === "PROVIDER" ? "PROVIDER" : "CONSUMER";
+    const allowedRanges = new Set(["1", "2-5", "5-10", "10+"]);
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -28,23 +30,61 @@ export async function POST(request: Request) {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const normalizedRange =
+      normalizedRole === "PROVIDER" && allowedRanges.has(providerEmployeeRange)
+        ? providerEmployeeRange
+        : normalizedRole === "PROVIDER"
+        ? "1"
+        : null;
+    const isCompanyProvider = normalizedRole === "PROVIDER" && normalizedRange === "10+";
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        phone,
-        role: "USER",
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-      },
-    });
+    // Create user (with backward-compat fallback for stale Prisma client)
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          phone,
+          role: normalizedRole,
+          providerEmployeeRange: normalizedRange,
+          isProfessional: false,
+          providerCvUrl: null,
+          companyVerificationStatus: isCompanyProvider ? "PENDING_DOCUMENTS" : "NOT_REQUIRED",
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          providerEmployeeRange: true,
+          companyVerificationStatus: true,
+        },
+      });
+    } catch (createError: unknown) {
+      const message = createError instanceof Error ? createError.message : String(createError);
+      if (!message.includes("Unknown argument `providerEmployeeRange`")) {
+        throw createError;
+      }
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          phone,
+          role: normalizedRole,
+          isProfessional: false,
+          providerCvUrl: null,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+        },
+      });
+    }
 
     return NextResponse.json(
       { message: "User created successfully", user },

@@ -7,24 +7,14 @@ export default function AdminMobileBlock() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check if running in Capacitor (mobile app)
-    const checkPlatform = async () => {
+    const checkPlatform = () => {
       if (typeof window !== "undefined") {
-        // Simple check for mobile browser
         const userAgent = navigator.userAgent.toLowerCase();
         const isMobileDevice =
           /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
             userAgent
           );
-
-        // Check if Capacitor is available
-        try {
-          const { Capacitor } = await import("@capacitor/core");
-          const isNative = Capacitor.isNativePlatform();
-          setIsMobile(isNative || isMobileDevice);
-        } catch {
-          setIsMobile(isMobileDevice);
-        }
+        setIsMobile(isMobileDevice);
       }
     };
 

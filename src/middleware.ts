@@ -8,7 +8,14 @@ export default withAuth(
     const isAuthPage = req.nextUrl.pathname.startsWith("/login") || 
                        req.nextUrl.pathname.startsWith("/register");
     const isAdminPage = req.nextUrl.pathname.startsWith("/admin");
+    const isProviderPage = req.nextUrl.pathname.startsWith("/provider");
+    const isProviderVerificationPage = req.nextUrl.pathname.startsWith("/provider/verification");
     const isDashboard = req.nextUrl.pathname.startsWith("/dashboard");
+    const isBookPage = req.nextUrl.pathname.includes("/book");
+
+    if (token?.isBanned) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
 
     // Redirect authenticated users away from auth pages
     if (isAuthPage && isAuth) {
@@ -16,7 +23,15 @@ export default withAuth(
       if (token?.role === "ADMIN") {
         return NextResponse.redirect(new URL("/admin", req.url));
       }
+      if (token?.role === "PROVIDER") {
+        return NextResponse.redirect(new URL("/provider", req.url));
+      }
       return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Unauthenticated user on protected routes
+    if (!token && (isAdminPage || isProviderPage || isDashboard || isBookPage)) {
+      return NextResponse.redirect(new URL("/login", req.url));
     }
 
     // Check admin access
@@ -24,9 +39,27 @@ export default withAuth(
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
+    if (isProviderPage && token?.role !== "PROVIDER") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    if (
+      req.nextUrl.pathname === "/provider" &&
+      token?.role === "PROVIDER" &&
+      token?.providerEmployeeRange === "10+" &&
+      token?.companyVerificationStatus !== "VERIFIED" &&
+      !isProviderVerificationPage
+    ) {
+      return NextResponse.redirect(new URL("/provider/verification", req.url));
+    }
+
     // Redirect admin from user dashboard to admin panel
     if (isDashboard && token?.role === "ADMIN") {
       return NextResponse.redirect(new URL("/admin", req.url));
+    }
+
+    if ((isDashboard || isBookPage) && token?.role === "PROVIDER") {
+      return NextResponse.redirect(new URL("/provider", req.url));
     }
 
     return NextResponse.next();
@@ -53,7 +86,9 @@ export const config = {
     "/profile/:path*",
     "/orders/:path*",
     "/admin/:path*",
+    "/provider/:path*",
     "/login",
     "/register",
+    "/services/:path*/book",
   ],
 };

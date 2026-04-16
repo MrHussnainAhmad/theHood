@@ -16,6 +16,8 @@ export default function RegisterPage() {
     phone: "",
     password: "",
     confirmPassword: "",
+    role: "CONSUMER",
+    providerEmployeeRange: "1",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -48,6 +50,10 @@ export default function RegisterPage() {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
+    if (formData.role === "PROVIDER" && !formData.providerEmployeeRange) {
+      newErrors.providerEmployeeRange = "Please select team size";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -68,6 +74,8 @@ export default function RegisterPage() {
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
+          role: formData.role,
+          providerEmployeeRange: formData.providerEmployeeRange,
         }),
       });
 
@@ -281,6 +289,94 @@ export default function RegisterPage() {
                     </p>
                   )}
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-700 mb-2">
+                    Are you a
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, role: "CONSUMER" })}
+                      className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all ${
+                        formData.role === "CONSUMER"
+                          ? "border-primary-500 bg-primary-50 text-primary-700"
+                          : "border-neutral-200 bg-white text-neutral-700"
+                      }`}
+                    >
+                      Consumer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          role: "PROVIDER",
+                          providerEmployeeRange:
+                            formData.providerEmployeeRange || "1",
+                        })
+                      }
+                      className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all ${
+                        formData.role === "PROVIDER"
+                          ? "border-primary-500 bg-primary-50 text-primary-700"
+                          : "border-neutral-200 bg-white text-neutral-700"
+                      }`}
+                    >
+                      Provider
+                    </button>
+                  </div>
+                </div>
+
+                {formData.role === "PROVIDER" && (
+                  <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-neutral-700 mb-2">
+                        Number of employees
+                      </label>
+                      <select
+                        value={formData.providerEmployeeRange}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            providerEmployeeRange: e.target.value,
+                          })
+                        }
+                        className={`w-full px-4 py-3 rounded-xl border-2 ${
+                          errors.providerEmployeeRange
+                            ? "border-red-300 bg-red-50"
+                            : "border-neutral-200 bg-white"
+                        } focus:border-primary-500 focus:ring-4 focus:ring-primary-100 outline-none transition-all`}
+                      >
+                        <option value="1">1</option>
+                        <option value="2-5">2-5</option>
+                        <option value="5-10">5-10</option>
+                        <option value="10+">10+ (company)</option>
+                      </select>
+                      {errors.providerEmployeeRange && (
+                        <p className="mt-1.5 text-sm text-red-600">
+                          {errors.providerEmployeeRange}
+                        </p>
+                      )}
+                      <p className="mt-1.5 text-xs text-neutral-500">
+                        Platform fee:{" "}
+                        {formData.providerEmployeeRange === "1"
+                          ? "7%"
+                          : formData.providerEmployeeRange === "2-5"
+                          ? "10%"
+                          : formData.providerEmployeeRange === "5-10"
+                          ? "13%"
+                          : "15%"}
+                      </p>
+                    </div>
+
+                    {formData.providerEmployeeRange === "10+" && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                        Company providers must submit verification documents after signup in Provider Workspace.
+                      </div>
+                    )}
+
+                  </div>
+                )}
 
                 {/* Password */}
                 <div>

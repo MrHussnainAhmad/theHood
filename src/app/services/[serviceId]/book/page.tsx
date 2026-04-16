@@ -45,8 +45,9 @@ export default function BookServicePage({ params }: PageProps) {
   );
   const [showPayment, setShowPayment] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
-  const [orderAmount, setOrderAmount] = useState(100);
-  const [createdOrderId, setCreatedOrderId] = useState("");
+  const [payableAmount, setPayableAmount] = useState(0);
+  const [activeOrderId, setActiveOrderId] = useState("");
+  const [isFinalizingPayment, setIsFinalizingPayment] = useState(false);
 
   const [formData, setFormData] = useState({
     address: "",
@@ -59,12 +60,20 @@ export default function BookServicePage({ params }: PageProps) {
 
   const [images, setImages] = useState<string[]>([]);
 
+  const providerAmount = (() => {
+    const raw = service?.price ? parseFloat(service.price.replace(/[^0-9.]/g, "")) : NaN;
+    return Number.isFinite(raw) && raw > 0 ? raw : 0;
+  })();
+
   // Redirect if not authenticated
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
+    } else if (status === "authenticated" && session?.user.role === "PROVIDER") {
+      toast.error("Providers cannot book services as consumers.");
+      router.push("/provider");
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   // Fetch service details
   useEffect(() => {
@@ -94,6 +103,7 @@ export default function BookServicePage({ params }: PageProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          serviceId,
           city: formData.city,
           area: formData.area,
           pincode: formData.pincode,
@@ -172,14 +182,18 @@ export default function BookServicePage({ params }: PageProps) {
       }
 
       const order = await response.json();
-      setCreatedOrderId(order.id);
+      setActiveOrderId(order.id);
+      const finalAmount =
+        typeof order?.amount === "number" && order.amount > 0
+          ? order.amount
+          : providerAmount;
+      setPayableAmount(finalAmount);
 
       // Create payment intent
       const paymentResponse = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: orderAmount,
           orderId: order.id,
         }),
       });
@@ -193,20 +207,51 @@ export default function BookServicePage({ params }: PageProps) {
       setClientSecret(paymentData.clientSecret);
       setShowPayment(true);
       toast.success("Order created! Please complete payment.");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create order");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to create order";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePaymentSuccess = () => {
-    setShowPayment(false);
-    toast.success("Order placed and paid successfully!");
-    router.push("/dashboard");
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    if (!activeOrderId) {
+      toast.error("Order reference missing. Please refresh and check your dashboard.");
+      return;
+    }
+
+    setIsFinalizingPayment(true);
+    try {
+      const response = await fetch(`/api/orders/${activeOrderId}/payment-confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentIntentId }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to finalize payment");
+      }
+
+      toast.success("Payment confirmed. Provider has been notified.");
+      setTimeout(() => {
+        setShowPayment(false);
+        router.push("/dashboard");
+      }, 1200);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Payment completed, but confirmation failed.";
+      toast.error(message);
+    } finally {
+      setIsFinalizingPayment(false);
+    }
   };
 
   const handlePaymentCancel = () => {
+    if (isFinalizingPayment) return;
     setShowPayment(false);
     toast.info("Payment cancelled. You can pay later from your dashboard.");
     router.push("/dashboard");
@@ -378,7 +423,7 @@ export default function BookServicePage({ params }: PageProps) {
                       Sorry, not available. Check soon!
                     </p>
                     <p className="text-sm text-red-700 mt-1">
-                      We're expanding our services. We'll notify you when we're
+                      We&apos;re expanding our services. We&apos;ll notify you when we&apos;re
                       available in your area.
                     </p>
                   </div>
@@ -504,30 +549,13 @@ export default function BookServicePage({ params }: PageProps) {
               </div>
 
               {/* Price Input */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Estimated Amount *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <DollarSign className="h-5 w-5 text-neutral-400" />
-                  </div>
-                  <input
-                    type="number"
-                    value={orderAmount}
-                    onChange={(e) =>
-                      setOrderAmount(parseFloat(e.target.value) || 0)
-                    }
-                    className="input-field pl-12"
-                    placeholder="100"
-                    min="1"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <p className="text-xs text-neutral-500 mt-1">
-                  This is an estimated amount. Final price may vary based on
-                  actual work required.
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                <p className="text-sm font-medium text-neutral-700">Provider Price</p>
+                <p className="mt-1 text-2xl font-bold text-primary-600">
+                  ${providerAmount.toFixed(2)}
+                </p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  Price is set by provider and cannot be edited by consumers.
                 </p>
               </div>
             </div>
@@ -539,7 +567,7 @@ export default function BookServicePage({ params }: PageProps) {
               </Button>
               <Button
                 onClick={() => setStep(3)}
-                disabled={!formData.description || orderAmount <= 0}
+                disabled={!formData.description || providerAmount <= 0}
               >
                 Continue
                 <ArrowRight className="w-5 h-5" />
@@ -638,11 +666,11 @@ export default function BookServicePage({ params }: PageProps) {
                     Total Amount
                   </h3>
                   <p className="text-3xl font-bold text-primary-600">
-                    ${orderAmount.toFixed(2)}
+                    ${providerAmount.toFixed(2)}
                   </p>
                 </div>
                 <p className="text-xs text-neutral-600 mt-2">
-                  You'll be redirected to secure payment after confirming
+                  You&apos;ll be redirected to secure payment after confirming
                 </p>
               </div>
             </div>
@@ -663,26 +691,46 @@ export default function BookServicePage({ params }: PageProps) {
 
       {/* Payment Modal */}
       {showPayment && clientSecret && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl animate-slide-up">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-600 to-accent-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <DollarSign className="w-8 h-8 text-white" />
+        <div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px]">
+          <div className="flex h-full items-end justify-center p-0 sm:items-center sm:p-4">
+            <div className="flex h-[92dvh] w-full flex-col rounded-t-3xl border border-line bg-white sm:h-auto sm:max-h-[88dvh] sm:max-w-xl sm:rounded-3xl">
+              <div className="flex items-start justify-between border-b border-neutral-200 px-4 py-4 sm:px-6">
+                <div className="pr-3">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-accent-600 text-white">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-neutral-900 sm:text-2xl">
+                    Complete Payment
+                  </h2>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Secure payment powered by Stripe
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close payment"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-neutral-200"
+                  onClick={handlePaymentCancel}
+                  disabled={isFinalizingPayment}
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <h2 className="text-2xl font-display font-bold text-neutral-900 mb-2">
-                Complete Payment
-              </h2>
-              <p className="text-neutral-600 text-sm">
-                Secure payment powered by Stripe
-              </p>
-            </div>
 
-            <PaymentWrapper
-              amount={orderAmount}
-              clientSecret={clientSecret}
-              onSuccess={handlePaymentSuccess}
-              onCancel={handlePaymentCancel}
-            />
+              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+                {isFinalizingPayment && (
+                  <div className="mb-4 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm font-medium text-primary-800">
+                    Finalizing payment and notifying provider...
+                  </div>
+                )}
+                <PaymentWrapper
+                  amount={payableAmount || providerAmount}
+                  clientSecret={clientSecret}
+                  onSuccess={handlePaymentSuccess}
+                  onCancel={handlePaymentCancel}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}

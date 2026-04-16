@@ -7,6 +7,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+////////////////////
+// ENUMS
+////////////////////
+
+enum Role {
+  USER
+  CONSUMER
+  PROVIDER
+  ADMIN
+}
+
+enum OrderStatus {
+  PROCESSING
+  ON_WAY
+  WORKING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+////////////////////
+// MODELS
+////////////////////
+
 model User {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
@@ -17,13 +47,48 @@ model User {
   phone         String?
   address       String?
   role          Role      @default(USER)
+  providerEmployeeRange String?
+  isProfessional Boolean  @default(false)
+  providerCvUrl String?
+  companyVerificationStatus String @default("NOT_REQUIRED")
+  companyVerificationDocUrl String?
+  companyName String?
+  companyRegistrationNumber String?
+  companyTaxId String?
+  companyAddress String?
+  companyContactName String?
+  companyContactPhone String?
+  companyVerificationFiles String[]
+  companyVerificationReviewNote String?
+  isBanned      Boolean   @default(false)
+  bannedAt      DateTime?
+  bannedReason  String?
+  stripeAccountId String?
+  stripeOnboarded Boolean @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   orders        Order[]
+  providerOrders Order[]  @relation("ProviderOrders")
+  services      Service[]
+  providerLocations ProviderLocation[]
   reviews       Review[]
   accounts      Account[]
   sessions      Session[]
+  payments      Payment[]
+}
+
+model ProviderLocation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  providerId String  @db.ObjectId
+  city      String
+  area      String?
+  pincode   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  provider  User     @relation(fields: [providerId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -32,12 +97,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? 
-  access_token      String? 
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? 
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -50,7 +115,8 @@ model Session {
   sessionToken String   @unique
   userId       String   @db.ObjectId
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -64,6 +130,7 @@ model VerificationToken {
 
 model Service {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  providerId  String?  @db.ObjectId
   name        String
   description String
   icon        String?
@@ -71,8 +138,9 @@ model Service {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   orders      Order[]
+  provider    User?    @relation(fields: [providerId], references: [id], onDelete: SetNull)
 }
 
 model AvailableLocation {
@@ -83,29 +151,45 @@ model AvailableLocation {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([city, area, pincode])
 }
 
 model Order {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String      @db.ObjectId
-  serviceId       String      @db.ObjectId
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String        @db.ObjectId
+  providerId      String?       @db.ObjectId
+  serviceId       String        @db.ObjectId
+
   address         String
   city            String
   area            String?
   pincode         String?
   description     String
   images          String[]
-  status          OrderStatus @default(PROCESSING)
+
+  status          OrderStatus   @default(PROCESSING)
   scheduledDate   DateTime?
   completedDate   DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  service         Service     @relation(fields: [serviceId], references: [id])
+
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentIntentId String?
+  amount          Float?
+  currency        String        @default("usd")
+  platformFee     Float?
+  providerPayoutAmount Float?
+  payoutStatus    String        @default("UNPAID")
+  payoutReleasedAt DateTime?
+  payoutTransferId String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider        User?         @relation("ProviderOrders", fields: [providerId], references: [id], onDelete: SetNull)
+  service         Service       @relation(fields: [serviceId], references: [id])
   review          Review?
+  payments        Payment[]
 }
 
 model Review {
@@ -115,67 +199,25 @@ model Review {
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
-  
+
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum Role {
-  USER
-  ADMIN
-}
-
-enum OrderStatus {
-  PROCESSING
-  ON_WAY
-  COMPLETED
-  CANCELLED
-}
-
-model Order {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String      @db.ObjectId
-  serviceId       String      @db.ObjectId
-  address         String
-  city            String
-  area            String?
-  pincode         String?
-  description     String
-  images          String[]
-  status          OrderStatus @default(PROCESSING)
-  scheduledDate   DateTime?
-  completedDate   DateTime?
-  
-  // Payment fields
-  paymentStatus   PaymentStatus @default(PENDING)
-  paymentIntentId String?
-  amount          Float?
-  currency        String       @default("usd")
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  service         Service     @relation(fields: [serviceId], references: [id])
-  review          Review?
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
 }
 
 model Payment {
   id              String        @id @default(auto()) @map("_id") @db.ObjectId
   orderId         String        @db.ObjectId
   userId          String        @db.ObjectId
+
   amount          Float
   currency        String        @default("usd")
   status          PaymentStatus @default(PENDING)
   paymentIntentId String        @unique
   clientSecret    String?
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

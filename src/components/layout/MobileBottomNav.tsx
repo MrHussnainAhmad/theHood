@@ -4,25 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Briefcase, Package, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
-
-const navigation = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Services", href: "/services", icon: Briefcase },
-  { name: "Orders", href: "/dashboard", icon: Package },
-  { name: "Profile", href: "/profile", icon: User },
-];
+import { useSession } from "next-auth/react";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const [isVisible, setIsVisible] = useState(true);
+  const { data: session } = useSession();
+  const navigation = [
+    { name: "Home", href: "/", icon: Home },
+    { name: "Services", href: "/services", icon: Briefcase },
+    {
+      name: "Orders",
+      href: session?.user.role === "PROVIDER" ? "/provider/orders" : "/dashboard",
+      icon: Package,
+    },
+    { name: "Profile", href: "/profile", icon: User },
+  ];
 
-  // Hide on admin pages
-  useEffect(() => {
-    setIsVisible(!pathname.startsWith("/admin"));
-  }, [pathname]);
-
-  if (!isVisible) return null;
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-neutral-200 safe-area-pb">

@@ -5,6 +5,8 @@ import AdminSidebar from "@/components/layout/AdminSidebar";
 import AdminMobileNav from "@/components/layout/AdminMobileNav";
 import AdminMobileBlock from "@/components/admin/AdminMobileBlock";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: {

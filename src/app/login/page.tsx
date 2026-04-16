@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    remember: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -53,6 +54,7 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
+        remember: String(formData.remember),
         redirect: false,
       });
 
@@ -68,6 +70,8 @@ export default function LoginPage() {
         // Redirect based on role
         if (session?.user?.role === "ADMIN") {
           router.push("/admin");
+        } else if (session?.user?.role === "PROVIDER") {
+          router.push("/provider");
         } else {
           router.push("/dashboard");
         }
@@ -197,23 +201,6 @@ export default function LoginPage() {
                 <p className="text-neutral-600">Access your Hood account</p>
               </div>
 
-              {/* Demo Credentials */}
-              <div className="bg-gradient-to-r from-accent-50 to-primary-50 border border-accent-200 rounded-xl p-4 mb-6">
-                <p className="text-xs font-semibold text-neutral-700 mb-2">
-                  Demo Credentials:
-                </p>
-                <div className="space-y-1">
-                  <p className="text-xs text-neutral-600">
-                    <span className="font-medium">Admin:</span> admin@hood.com /
-                    admin123
-                  </p>
-                  <p className="text-xs text-neutral-600">
-                    <span className="font-medium">User:</span> user@hood.com /
-                    user123
-                  </p>
-                </div>
-              </div>
-
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email */}
                 <div>
@@ -290,6 +277,10 @@ export default function LoginPage() {
                   <input
                     id="remember"
                     type="checkbox"
+                    checked={formData.remember}
+                    onChange={(e) =>
+                      setFormData({ ...formData, remember: e.target.checked })
+                    }
                     className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500 focus:ring-2"
                   />
                   <label
@@ -314,7 +305,7 @@ export default function LoginPage() {
               {/* Footer */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-neutral-600">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link
                     href="/register"
                     className="font-semibold text-primary-600 hover:text-primary-700 transition-colors"
@@ -331,7 +322,7 @@ export default function LoginPage() {
                 href="/"
                 className="text-sm text-neutral-600 hover:text-primary-600 transition-colors font-medium"
               >
-                ← Back to Home
+                &larr; Back to Home
               </Link>
             </div>
           </div>
@@ -340,3 +331,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+

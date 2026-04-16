@@ -4,19 +4,26 @@ import { Users, Briefcase, Package, MapPin, TrendingUp, Clock } from "lucide-rea
 async function getStats() {
   const [
     totalUsers,
+    bannedUsers,
     totalServices,
     totalOrders,
     totalLocations,
     processingOrders,
     completedOrders,
+    revenueResult,
     recentOrders,
   ] = await Promise.all([
     prisma.user.count(),
+    prisma.user.count({ where: { isBanned: true } }),
     prisma.service.count({ where: { active: true } }),
     prisma.order.count(),
     prisma.availableLocation.count({ where: { active: true } }),
     prisma.order.count({ where: { status: "PROCESSING" } }),
     prisma.order.count({ where: { status: "COMPLETED" } }),
+    prisma.order.aggregate({
+      _sum: { amount: true },
+      where: { paymentIntentId: { not: null } },
+    }),
     prisma.order.findMany({
       take: 5,
       include: {
@@ -29,11 +36,13 @@ async function getStats() {
 
   return {
     totalUsers,
+    bannedUsers,
     totalServices,
     totalOrders,
     totalLocations,
     processingOrders,
     completedOrders,
+    revenue: revenueResult._sum.amount || 0,
     recentOrders,
   };
 }
@@ -69,7 +78,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
@@ -79,7 +88,7 @@ export default async function AdminDashboard() {
               </p>
               <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
-                Active
+                {stats.bannedUsers} banned
               </p>
             </div>
             <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
@@ -132,6 +141,20 @@ export default async function AdminDashboard() {
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
               <MapPin className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-neutral-600 mb-1">Revenue</p>
+              <p className="text-3xl font-bold text-neutral-900">
+                ${stats.revenue.toFixed(2)}
+              </p>
+              <p className="text-xs text-neutral-500 mt-1">Booked volume</p>
+            </div>
+            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-emerald-600" />
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ import { ArrowLeft, MapPin, Calendar, Package, Star } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
-async function getOrder(orderId: string, userId: string, isAdmin: boolean) {
+async function getOrder(orderId: string, userId: string, isAdmin: boolean, isProvider: boolean) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
@@ -27,7 +27,7 @@ async function getOrder(orderId: string, userId: string, isAdmin: boolean) {
   if (!order) return null;
 
   // Check authorization
-  if (!isAdmin && order.userId !== userId) {
+  if (!isAdmin && !(isProvider && order.providerId === userId) && order.userId !== userId) {
     return null;
   }
 
@@ -49,7 +49,8 @@ export default async function OrderDetailsPage({
   const order = await getOrder(
     orderId,
     session.user.id,
-    session.user.role === "ADMIN"
+    session.user.role === "ADMIN",
+    session.user.role === "PROVIDER"
   );
 
   if (!order) {

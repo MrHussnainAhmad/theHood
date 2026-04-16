@@ -53,6 +53,15 @@ export default function AdminMobileNav() {
             Users
           </Link>
           <Link
+            href="/admin/verifications"
+            onClick={() => setIsOpen(false)}
+            className={`block px-4 py-2 rounded-lg hover:bg-neutral-50 ${
+              pathname === "/admin/verifications" ? "bg-accent-50 text-accent-700" : "text-neutral-700"
+            }`}
+          >
+            Verifications
+          </Link>
+          <Link
             href="/admin/services"
             onClick={() => setIsOpen(false)}
             className="block px-4 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50"
@@ -62,19 +71,32 @@ export default function AdminMobileNav() {
           <Link
             href="/admin/orders"
             onClick={() => setIsOpen(false)}
-            className="block px-4 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50"
+            className={`block px-4 py-2 rounded-lg hover:bg-neutral-50 ${
+              pathname === "/admin/orders" ? "bg-accent-50 text-accent-700" : "text-neutral-700"
+            }`}
           >
             Orders
           </Link>
           <Link
+            href="/admin/payouts"
+            onClick={() => setIsOpen(false)}
+            className={`block px-4 py-2 rounded-lg hover:bg-neutral-50 ${
+              pathname === "/admin/payouts" ? "bg-accent-50 text-accent-700" : "text-neutral-700"
+            }`}
+          >
+            Payouts
+          </Link>
+          <Link
             href="/admin/locations"
             onClick={() => setIsOpen(false)}
-            className="block px-4 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50"
+            className={`block px-4 py-2 rounded-lg hover:bg-neutral-50 ${
+              pathname === "/admin/locations" ? "bg-accent-50 text-accent-700" : "text-neutral-700"
+            }`}
           >
             Locations
           </Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => signOut({ callbackUrl: "/login" })}
             className="w-full text-left px-4 py-2 rounded-lg text-red-700 hover:bg-red-50"
           >
             Sign Out

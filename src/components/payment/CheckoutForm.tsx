@@ -8,11 +8,11 @@ import {
 } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
-import { CreditCard, Lock, Shield } from "lucide-react";
+import { CreditCard, Lock, Shield, CircleCheck } from "lucide-react";
 
 interface CheckoutFormProps {
   amount: number;
-  onSuccess: () => void;
+  onSuccess: (paymentIntentId: string) => void;
   onCancel: () => void;
 }
 
@@ -49,9 +49,9 @@ export default function CheckoutForm({
         console.error("Payment error:", error);
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
         toast.success("Payment successful!");
-        onSuccess();
+        onSuccess(paymentIntent.id);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Payment exception:", error);
       toast.error("Payment failed. Please try again.");
     } finally {
@@ -60,28 +60,28 @@ export default function CheckoutForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Amount Display */}
-      <div className="bg-gradient-to-r from-primary-50 to-accent-50 rounded-xl p-6 border border-primary-100">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-neutral-600">Total Amount</span>
-          <CreditCard className="w-5 h-5 text-primary-600" />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="rounded-2xl border border-line bg-[linear-gradient(130deg,#fff8ef_0%,#f4ebdc_100%)] p-5">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-600">
+            Total Amount
+          </span>
+          <CreditCard className="h-5 w-5 text-primary-700" />
         </div>
-        <p className="text-4xl font-bold text-neutral-900">
+        <p className="text-3xl font-bold text-neutral-900 sm:text-4xl">
           ${amount.toFixed(2)}
         </p>
-        <p className="text-xs text-neutral-500 mt-2">
-          One-time payment • No hidden fees
+        <p className="mt-2 text-xs text-neutral-600">
+          One-time payment only. No hidden fees.
         </p>
       </div>
 
-      {/* Payment Element */}
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-neutral-700">
+        <label className="block text-sm font-semibold text-neutral-800">
           Payment Details
         </label>
-        <div className="border border-neutral-200 rounded-xl p-4 bg-white shadow-sm">
-          <PaymentElement 
+        <div className="rounded-2xl border border-line bg-white p-3 shadow-[0_8px_26px_rgba(20,17,15,0.06)] sm:p-4">
+          <PaymentElement
             options={{
               layout: {
                 type: "tabs",
@@ -92,32 +92,34 @@ export default function CheckoutForm({
         </div>
       </div>
 
-      {/* Security Badges */}
-      <div className="flex items-center justify-center gap-6 py-4 border-t border-b border-neutral-100">
-        <div className="flex items-center gap-2 text-neutral-600">
-          <Lock className="w-4 h-4" />
+      <div className="grid grid-cols-1 gap-2 rounded-xl border border-neutral-200 bg-neutral-50 p-3 sm:grid-cols-3">
+        <div className="flex items-center gap-2 text-neutral-700">
+          <Lock className="h-4 w-4" />
           <span className="text-xs font-medium">SSL Encrypted</span>
         </div>
-        <div className="flex items-center gap-2 text-neutral-600">
-          <Shield className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-neutral-700">
+          <Shield className="h-4 w-4" />
           <span className="text-xs font-medium">PCI Compliant</span>
+        </div>
+        <div className="flex items-center gap-2 text-neutral-700">
+          <CircleCheck className="h-4 w-4" />
+          <span className="text-xs font-medium">Verified by Stripe</span>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 pt-2">
+      <div className="flex flex-col gap-2 pt-1 sm:flex-row">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="flex-1"
+          className="w-full sm:flex-1"
           disabled={isLoading}
         >
           Cancel
         </Button>
         <Button
           type="submit"
-          className="flex-1"
+          className="w-full sm:flex-1"
           disabled={!stripe || isLoading}
           isLoading={isLoading}
         >
@@ -125,10 +127,9 @@ export default function CheckoutForm({
         </Button>
       </div>
 
-      {/* Footer */}
-      <p className="text-xs text-center text-neutral-500 flex items-center justify-center gap-1">
-        <Lock className="w-3 h-3" />
-        Secured by Stripe • Your payment info is encrypted and secure
+      <p className="flex items-center justify-center gap-1 text-center text-xs text-neutral-500">
+        <Lock className="h-3 w-3" />
+        Secured by Stripe. Your payment info stays encrypted.
       </p>
     </form>
   );

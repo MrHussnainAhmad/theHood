@@ -7,6 +7,8 @@ import { Package, Clock, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
+export const dynamic = "force-dynamic";
+
 async function getUserOrders(userId: string) {
   return await prisma.order.findMany({
     where: { userId },
@@ -27,6 +29,12 @@ export default async function DashboardPage() {
 
   if (!session) {
     redirect("/login");
+  }
+  if (session.user.role === "PROVIDER") {
+    redirect("/provider");
+  }
+  if (session.user.role === "ADMIN") {
+    redirect("/admin");
   }
 
   const orders = await getUserOrders(session.user.id);

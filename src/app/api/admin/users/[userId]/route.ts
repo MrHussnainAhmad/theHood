@@ -17,17 +17,62 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, phone, role } = body;
+    const {
+      name,
+      phone,
+      role,
+      isBanned,
+      bannedReason,
+      companyVerificationStatus,
+      companyVerificationReviewNote,
+    } = body;
+
+    if (session.user.id === params.userId) {
+      return NextResponse.json(
+        { error: "You cannot modify your own admin account here" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      companyVerificationStatus === "REJECTED" &&
+      (!companyVerificationReviewNote || !String(companyVerificationReviewNote).trim())
+    ) {
+      return NextResponse.json(
+        { error: "Rejection reason is required" },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.user.update({
       where: { id: params.userId },
-      data: { name, phone, role },
+      data: {
+        name,
+        phone,
+        role,
+        isBanned,
+        bannedReason: isBanned ? bannedReason || "Policy violation" : null,
+        bannedAt: isBanned ? new Date() : null,
+        companyVerificationStatus,
+        companyVerificationReviewNote:
+          companyVerificationStatus === "REJECTED"
+            ? String(companyVerificationReviewNote).trim()
+            : companyVerificationStatus === "VERIFIED"
+            ? "Verified by admin"
+            : companyVerificationReviewNote,
+      },
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
         role: true,
+        isBanned: true,
+        bannedAt: true,
+        bannedReason: true,
+        providerEmployeeRange: true,
+        companyVerificationStatus: true,
+        companyVerificationReviewNote: true,
       },
     });
 

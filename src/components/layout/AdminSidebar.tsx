@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
+  BadgeCheck,
   Briefcase,
   Package,
   MapPin,
+  Wallet,
   Home,
   LogOut,
 } from "lucide-react";
@@ -17,8 +19,10 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Verifications", href: "/admin/verifications", icon: BadgeCheck },
   { name: "Services", href: "/admin/services", icon: Briefcase },
   { name: "Orders", href: "/admin/orders", icon: Package },
+  { name: "Payouts", href: "/admin/payouts", icon: Wallet },
   { name: "Locations", href: "/admin/locations", icon: MapPin },
 ];
 
@@ -26,8 +30,8 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="hidden md:flex md:flex-shrink-0">
-      <div className="flex flex-col w-64 bg-white border-r border-neutral-200">
+    <div className="hidden md:flex md:flex-none md:w-64">
+      <div className="sticky top-0 flex h-screen w-64 min-w-64 max-w-64 flex-col bg-white border-r border-neutral-200">
         {/* Logo */}
         <div className="flex items-center gap-2 h-16 px-6 border-b border-neutral-200">
           <div className="w-10 h-10 bg-gradient-to-br from-accent-600 to-accent-700 rounded-lg flex items-center justify-center">
@@ -73,7 +77,7 @@ export default function AdminSidebar() {
             Back to Site
           </Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => signOut({ callbackUrl: "/login" })}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-700 hover:bg-red-50 font-medium transition-all"
           >
             <LogOut className="w-5 h-5" />

@@ -1,255 +1,107 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/Button";
-import { Sparkles, Shield, Clock, ArrowRight, Home as HomeIcon } from "lucide-react";
+import { ArrowRight, ShieldCheck, Sparkles, TimerReset, Wrench } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import ReviewsSection from "@/components/home/ReviewsSection";
 
 export default async function HomePage() {
-  // Check if user is logged in
   const session = await getServerSession(authOptions);
 
-  // Redirect authenticated users to their respective dashboards
   if (session) {
-    if (session.user.role === "ADMIN") {
-      redirect("/admin");
-    } else {
-      redirect("/dashboard");
-    }
+    if (session.user.role === "ADMIN") redirect("/admin");
+    if (session.user.role === "PROVIDER") redirect("/provider");
+    redirect("/dashboard");
   }
 
-  // Only show homepage to non-authenticated users
   return (
-    <div className="min-h-screen">
+    <div className="texture-grain min-h-screen">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-accent-50 py-20 sm:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md mb-6 animate-fade-in">
-              <Sparkles className="w-4 h-4 text-accent-600" />
-              <span className="text-sm font-medium text-neutral-700">Premium Home Services</span>
-            </div>
-            
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-neutral-900 mb-6 animate-slide-up">
-              Your Home Deserves{" "}
-              <span className="bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-                Premium Care
-              </span>
+      <main className="px-4 pb-20 pt-8 xs:px-6 md:px-10 lg:px-16">
+        <section className="mx-auto grid w-full max-w-[86rem] gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <article className="relative overflow-hidden rounded-[2rem] border border-line/80 bg-[linear-gradient(140deg,#fff8ef_0%,#f4ead9_60%,#efe1ce_100%)] p-7 sm:p-10 lg:p-14">
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-300/60 bg-white/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              Crafted Home Care
+            </p>
+            <h1 className="fluid-title max-w-3xl text-balance text-ink">
+              Spaces cared for by humans who treat details like art.
             </h1>
-            
-            <p className="text-xl text-neutral-600 mb-8 max-w-2xl mx-auto animate-slide-up">
-              Professional cleaning, painting, repairs, plumbing, and pest control services delivered with excellence.
+            <p className="fluid-subtitle mt-6 max-w-2xl text-neutral-700">
+              Hood connects homeowners with trusted providers for cleaning, repairs, maintenance, and specialist work across your city.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
-              <Link href="/services">
-                <Button size="lg" className="w-full sm:w-auto">
-                  Explore Services
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link href="/services" className="btn-primary">
+                Explore Services
+                <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/register">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Create Account
-                </Button>
+              <Link href="/register" className="btn-secondary">
+                Become Consumer or Provider
               </Link>
             </div>
-          </div>
-        </div>
-
-        {/* Background Decoration */}
-        <div className="absolute top-0 right-0 -z-10 transform translate-x-1/2 -translate-y-1/2">
-          <div className="w-96 h-96 bg-primary-200 rounded-full opacity-20 blur-3xl"></div>
-        </div>
-        <div className="absolute bottom-0 left-0 -z-10 transform -translate-x-1/2 translate-y-1/2">
-          <div className="w-96 h-96 bg-accent-200 rounded-full opacity-20 blur-3xl"></div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-neutral-900 mb-4">
-              Why Choose Hood?
-            </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              We bring professional-grade services right to your doorstep
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="card-hover text-center">
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-primary-600" />
-              </div>
-              <h3 className="text-xl font-display font-semibold mb-2">Premium Quality</h3>
-              <p className="text-neutral-600">
-                Certified professionals with years of experience
-              </p>
-            </div>
-
-            <div className="card-hover text-center">
-              <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-8 h-8 text-accent-600" />
-              </div>
-              <h3 className="text-xl font-display font-semibold mb-2">On-Time Service</h3>
-              <p className="text-neutral-600">
-                Punctual and reliable service delivery
-              </p>
-            </div>
-
-            <div className="card-hover text-center">
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-primary-600" />
-              </div>
-              <h3 className="text-xl font-display font-semibold mb-2">Guaranteed</h3>
-              <p className="text-neutral-600">
-                100% satisfaction or your money back
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Preview */}
-      <section className="py-20 bg-neutral-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-neutral-900 mb-4">
-              Our Services
-            </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Professional solutions for every home maintenance need
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {[
-              { icon: "✨", name: "Cleaning", color: "from-blue-500 to-cyan-500" },
-              { icon: "🎨", name: "Painting", color: "from-purple-500 to-pink-500" },
-              { icon: "🔧", name: "Repairs", color: "from-orange-500 to-red-500" },
-              { icon: "💧", name: "Plumbing", color: "from-teal-500 to-green-500" },
-              { icon: "🐛", name: "Pest Control", color: "from-yellow-500 to-orange-500" },
-              { icon: "🏠", name: "Maintenance", color: "from-indigo-500 to-purple-500" },
-            ].map((service, idx) => (
-              <div
-                key={idx}
-                className="card-hover text-center p-6"
-              >
-                <div className={`w-16 h-16 bg-gradient-to-br ${service.color} rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg`}>
-                  {service.icon}
+            <div className="mt-10 grid max-w-xl grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+              {["500+ clients", "1200+ jobs", "4.9 avg rating", "24h support"].map((item) => (
+                <div key={item} className="rounded-2xl border border-line/70 bg-white/70 px-3 py-3 text-center text-neutral-700">
+                  {item}
                 </div>
-                <h3 className="font-semibold text-neutral-900">{service.name}</h3>
-              </div>
-            ))}
+              ))}
+            </div>
+          </article>
+
+          <aside className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="card-hover relative overflow-hidden">
+              <p className="text-xs uppercase tracking-[0.16em] text-accent-700">Provider Mode</p>
+              <h2 className="mt-3 text-3xl text-ink">Offer your service, manage your own orders.</h2>
+              <p className="mt-3 text-sm text-neutral-600">Create listings, update availability, and move jobs through status in your provider workspace.</p>
+            </div>
+            <div className="card-hover bg-[linear-gradient(130deg,#eaf6f2_0%,#d9eee8_100%)]">
+              <p className="text-xs uppercase tracking-[0.16em] text-accent-800">Consumer Mode</p>
+              <h2 className="mt-3 text-3xl text-ink">Book quickly, track transparently.</h2>
+              <p className="mt-3 text-sm text-neutral-700">Check area availability, share requirements, and follow each service from booking to completion.</p>
+            </div>
+          </aside>
+        </section>
+
+        <section id="how" className="mx-auto mt-20 w-full max-w-[86rem]">
+          <div className="mb-10 flex items-end justify-between gap-4">
+            <h2 className="text-[clamp(1.8rem,4vw,3.25rem)] text-ink">Why Hood feels different</h2>
+            <p className="max-w-sm text-sm text-neutral-600">No bloated marketplace noise. Just clear workflows, trusted people, and reliable execution.</p>
           </div>
 
-          <div className="text-center mt-12">
-            <Link href="/services">
-              <Button size="lg">
-                View All Services
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Reviews Section */}
-      <ReviewsSection />
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary-600 to-accent-600 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}></div>
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-3xl sm:text-5xl font-display font-bold text-white mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied customers who trust Hood for their home service needs.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register">
-              <Button size="lg" variant="outline" className="bg-white text-primary-600 hover:bg-white/90 border-0 w-full sm:w-auto">
-                Create Free Account
-              </Button>
-            </Link>
-            <Link href="/services">
-              <Button size="lg" className="bg-white/20 text-white hover:bg-white/30 border-2 border-white w-full sm:w-auto backdrop-blur-sm">
-                Browse Services
-              </Button>
-            </Link>
-          </div>
-
-          <div className="mt-12 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-            <div>
-              <div className="text-4xl font-bold text-white mb-1">500+</div>
-              <div className="text-white/80 text-sm">Happy Customers</div>
+          <div className="grid gap-5 md:grid-cols-12">
+            <div className="card md:col-span-7 lg:col-span-6">
+              <ShieldCheck className="h-6 w-6 text-primary-600" />
+              <h3 className="mt-4 text-2xl text-ink">Verified providers, safer decisions</h3>
+              <p className="mt-3 text-neutral-600">Profiles are tied to real accounts, with optional professional CV links and platform-level moderation.</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-1">1000+</div>
-              <div className="text-white/80 text-sm">Services Completed</div>
+            <div className="card md:col-span-5 lg:col-span-3">
+              <TimerReset className="h-6 w-6 text-accent-700" />
+              <h3 className="mt-4 text-xl text-ink">Faster booking loop</h3>
+              <p className="mt-3 text-sm text-neutral-600">From service selection to scheduling and payment in one clean flow.</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-1">4.9</div>
-              <div className="text-white/80 text-sm">Average Rating</div>
+            <div className="card md:col-span-12 lg:col-span-3">
+              <Wrench className="h-6 w-6 text-primary-700" />
+              <h3 className="mt-4 text-xl text-ink">Full order traceability</h3>
+              <p className="mt-3 text-sm text-neutral-600">Status updates, notes, and review outcomes stay visible after completion.</p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="bg-neutral-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            {/* Brand */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-600 to-accent-600 rounded-lg flex items-center justify-center">
-                  <HomeIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-display font-bold">Hood</span>
-              </div>
-              <p className="text-neutral-400 mb-4 max-w-md">
-                Professional home maintenance services delivered with excellence. Your trusted partner for all home service needs.
-              </p>
-            </div>
+        <section id="reviews" className="mx-auto mt-20 w-full max-w-[86rem]">
+          <ReviewsSection />
+        </section>
 
-            {/* Quick Links */}
-            <div>
-              <h3 className="font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2">
-                <li><Link href="/services" className="text-neutral-400 hover:text-white transition-colors">Services</Link></li>
-                <li><Link href="/login" className="text-neutral-400 hover:text-white transition-colors">Login</Link></li>
-                <li><Link href="/register" className="text-neutral-400 hover:text-white transition-colors">Register</Link></li>
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Terms of Service</a></li>
-              </ul>
-            </div>
+        <section className="mx-auto mt-20 w-full max-w-[86rem] overflow-hidden rounded-[2rem] border border-line bg-[linear-gradient(115deg,#1d3a32_0%,#2f7a66_40%,#8f2e1b_100%)] p-8 text-paper sm:p-12">
+          <h2 className="max-w-3xl text-[clamp(1.8rem,4.8vw,4rem)] text-balance">Built for both sides of the work.</h2>
+          <p className="mt-4 max-w-2xl text-paper/85">Create an account as a consumer to book trusted providers, or join as a provider and grow your service business.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/register" className="inline-flex min-h-11 items-center justify-center rounded-full bg-paper px-6 py-3 text-sm font-semibold text-ink transition hover:translate-y-[-2px]">Create Account</Link>
+            <Link href="/services" className="inline-flex min-h-11 items-center justify-center rounded-full border border-paper/50 px-6 py-3 text-sm font-semibold text-paper transition hover:bg-paper/10">See Service Catalog</Link>
           </div>
-
-          <div className="pt-8 border-t border-neutral-800 text-center text-neutral-400">
-            <p>© 2024 Hood. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+        </section>
+      </main>
     </div>
   );
 }
